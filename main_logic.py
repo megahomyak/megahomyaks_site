@@ -31,7 +31,7 @@ def add_ending_signature(
         modification_time
     ).date()
     modification_date_text = (
-        f" (last modification done in {get_date_with_dots(modification_date)})"
+        f" (last edit in {get_date_with_dots(modification_date)})"
     ) if creation_date != modification_date else ""
     return (
         f'{html}<i><p style="text-align: right;">- {nickname}, '
