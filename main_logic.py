@@ -20,7 +20,7 @@ def add_file_to_files(filename: str) -> None:
 
 
 def get_date_with_dots(date: datetime.date) -> str:
-    return f"{date.day}.{date.month}.{date.year}"
+    return f"{str(date.day).zfill(2)}.{str(date.month).zfill(2)}.{date.year}"
 
 
 def add_ending_signature(
