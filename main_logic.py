@@ -1,3 +1,4 @@
+import datetime
 import os
 import re
 from typing import Dict, Union
@@ -16,6 +17,26 @@ files: Dict[str, Union[bytes, str]] = {}
 def add_file_to_files(filename: str) -> None:
     with open(filename, "rb") as f:
         files[filename] = f.read()
+
+
+def get_date_with_dots(date: datetime.date) -> str:
+    return f"{date.day}.{date.month}.{date.year}"
+
+
+def add_ending_signature(
+        html: str, creation_time: int, modification_time: int,
+        nickname: str = "megahomyak") -> str:
+    creation_date = datetime.datetime.fromtimestamp(creation_time).date()
+    modification_date = datetime.datetime.fromtimestamp(
+        modification_time
+    ).date()
+    modification_date_text = (
+        f" (last modification done in {get_date_with_dots(modification_date)})"
+    ) if creation_date != modification_date else ""
+    return (
+        f'{html}<i><p style="text-align: right;">- {nickname}, '
+        f'{get_date_with_dots(creation_date)}{modification_date_text}</p></i>'
+    )
 
 
 def make_prettier(
@@ -48,14 +69,18 @@ article_filenames.sort(
 )
 
 for filename in article_filenames:
-    with open(os.path.join("articles", filename), "r", encoding="utf-8") as f:
+    path_to_file = os.path.join("articles", filename)
+    with open(path_to_file, "r", encoding="utf-8") as f:
         article = f.read()
     article_title = header_regex.match(article)
     if not article_title:
         raise ValueError("Article should start with header!")
     article_title = article_title.group(1)
     article_titles_with_links.append((article_title, filename))
-    files[filename] = make_prettier(markdown(article), title=article_title)
+    files[filename] = add_ending_signature(
+        make_prettier(markdown(article), title=article_title),
+        int(os.path.getctime(path_to_file)), int(os.path.getmtime(path_to_file))
+    )
 
 for filename in ("site_title.png", "favicon.ico"):
     add_file_to_files(filename)
