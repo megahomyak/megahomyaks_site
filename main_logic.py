@@ -50,10 +50,11 @@ def make_prettier(
 
 
 article_folder_files_names = os.listdir("articles")
-article_filenames = []
-for filename in article_folder_files_names:
-    if os.path.splitext(filename)[1] == ".md":
-        article_filenames.append(filename)
+article_filenames = [
+    filename
+    for filename in article_folder_files_names
+    if os.path.splitext(filename)[1] == ".md"
+]
 
 # noinspection PyShadowingNames
 article_filenames.sort(
