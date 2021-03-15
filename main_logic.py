@@ -14,7 +14,7 @@ preloaded_files: Dict[str, Union[bytes, str]] = {}
 
 
 def get_date_with_dots(date: datetime.date) -> str:
-    return f"{str(date.day).zfill(2)}.{str(date.month).zfill(2)}.{date.year}"
+    return date.strftime("%d.%m.%Y")
 
 
 def add_ending_signature(
