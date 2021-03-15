@@ -10,13 +10,7 @@ from markdown import markdown
 header_regex = re.compile("#{1,5} (.+)\n")
 
 article_titles_with_links = []
-files: Dict[str, Union[bytes, str]] = {}
-
-
-# noinspection PyShadowingNames
-def add_file_to_files(filename: str) -> None:
-    with open(filename, "rb") as f:
-        files[filename] = f.read()
+preloaded_files: Dict[str, Union[bytes, str]] = {}
 
 
 def get_date_with_dots(date: datetime.date) -> str:
@@ -57,11 +51,9 @@ def make_prettier(
 
 article_folder_files_names = os.listdir("articles")
 article_filenames = []
-for index, filename in enumerate(article_folder_files_names):
+for filename in article_folder_files_names:
     if os.path.splitext(filename)[1] == ".md":
         article_filenames.append(filename)
-    else:
-        add_file_to_files(os.path.join("articles", filename))
 
 # noinspection PyShadowingNames
 article_filenames.sort(
@@ -77,13 +69,14 @@ for filename in article_filenames:
         raise ValueError("Article should start with header!")
     article_title = article_title.group(1)
     article_titles_with_links.append((article_title, filename))
-    files[filename] = add_ending_signature(
+    preloaded_files[filename] = add_ending_signature(
         make_prettier(markdown(article), title=article_title),
         int(os.path.getctime(path_to_file)), int(os.path.getmtime(path_to_file))
     )
 
 for filename in ("site_title.png", "favicon.ico"):
-    add_file_to_files(filename)
+    with open(filename, "rb") as f:
+        preloaded_files[filename] = f.read()
 
 main_page_html = make_prettier(
     (
@@ -124,17 +117,24 @@ async def respond_with_article(request: web.Request) -> web.Response:
     filename = request.match_info["filename"]
     if os.path.splitext(filename)[1] == ".md":
         return make_html_response(
-            files.get(
+            preloaded_files.get(
                 filename,
                 f"Article named '{filename}' isn't found!"  # Default
             )
         )
     else:
-        file = files.get(filename)
+        file = preloaded_files.get(filename)
         if file:
             return web.Response(body=file)
         else:
-            return make_html_response(f"File named '{filename}' isn't found!")
+            try:
+                # noinspection PyShadowingNames
+                with open(os.path.join("articles", filename), "rb") as f:
+                    return web.Response(body=f.read())
+            except FileNotFoundError:
+                return make_html_response(
+                    f"File named '{filename}' isn't found!"
+                )
 
 
 app.add_routes(routes)
