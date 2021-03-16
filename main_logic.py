@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse, Response, PlainTextResponse
 from markdown import markdown
 
 import page_makers
-from dataclasses_ import ArticleInfo
+from dataclasses_ import ArticleInfo, FileInfo
 
 app = fastapi.FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -18,27 +18,33 @@ ARTICLES_FOLDER_NAME = "articles"
 HEADER_REGEX = re.compile("#{1,5} (.+)\n")
 
 
+# noinspection PyShadowingNames
 def get_articles() -> OrderedDict[str, ArticleInfo]:
-    article_filenames_with_paths = [
-        (filename, os.path.join(ARTICLES_FOLDER_NAME, filename))
-        for filename in os.listdir(ARTICLES_FOLDER_NAME)
-        if os.path.splitext(filename)[1] == ".md"
-    ]
-    article_filenames_with_paths.sort(
-        key=lambda filename_with_path: os.path.getctime(
-            filename_with_path[1]  # Path
-        )
-    )
+    article_files_info = []
+    for filename in os.listdir(ARTICLES_FOLDER_NAME):
+        if os.path.splitext(filename)[1] == ".md":
+            path = os.path.join(ARTICLES_FOLDER_NAME, filename)
+            file_info = os.stat(path)
+            article_files_info.append(
+                FileInfo(filename, path, file_info.st_ctime, file_info.st_mtime)
+            )
+    article_files_info.sort(key=lambda file_info: file_info.creation_time)
     # noinspection PyShadowingNames
     articles = collections.OrderedDict()
-    for filename, path in article_filenames_with_paths:
-        article_text = open(path, "r", encoding="utf-8").read()
+    for file_info in article_files_info:
+        article_text = open(file_info.path, "r", encoding="utf-8").read()
         title = HEADER_REGEX.match(article_text)
         if title:
             title = title.group(1)
         else:
-            raise ValueError(f"No title found in article {filename}!")
-        articles[filename] = ArticleInfo(title, markdown(article_text))
+            raise ValueError(f"No title found in article {file_info.filename}!")
+        articles[file_info.filename] = ArticleInfo(
+            title,
+            page_makers.add_ending_signature(
+                page_makers.make_prettier(markdown(article_text), title),
+                file_info.creation_time, file_info.modification_time
+            )
+        )
     return articles
 
 

@@ -1,3 +1,4 @@
+import datetime
 from typing import OrderedDict
 
 from dataclasses_ import ArticleInfo
@@ -35,4 +36,24 @@ def make_main_page(articles_info: OrderedDict[str, ArticleInfo]) -> str:
         ),
         title="megahomyak’s site",
         make_github_style_headers=False
+    )
+
+
+def get_date_with_dots(date: datetime.date) -> str:
+    return date.strftime("%d.%m.%Y")
+
+
+def add_ending_signature(
+        html: str, creation_time: float, modification_time: float,
+        nickname: str = "megahomyak") -> str:
+    creation_date = datetime.datetime.fromtimestamp(creation_time).date()
+    modification_date = datetime.datetime.fromtimestamp(
+        modification_time
+    ).date()
+    modification_date_text = (
+        f" (last modification done in {get_date_with_dots(modification_date)})"
+    ) if creation_date != modification_date else ""
+    return (
+        f'{html}<i><p style="text-align: right;">- {nickname}, '
+        f'{get_date_with_dots(creation_date)}{modification_date_text}</p></i>'
     )
