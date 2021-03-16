@@ -1,4 +1,4 @@
-from typing import List
+from typing import OrderedDict
 
 from dataclasses_ import ArticleInfo
 
@@ -19,7 +19,7 @@ def make_prettier(
     )
 
 
-def make_main_page(articles_info: List[ArticleInfo]) -> str:
+def make_main_page(articles_info: OrderedDict[str, ArticleInfo]) -> str:
     return make_prettier(
         (
             '<p align="center"><img src="site_title.png" width="98%" '
@@ -27,9 +27,9 @@ def make_main_page(articles_info: List[ArticleInfo]) -> str:
             '<h1>Articles:</h1>'
             '<ul>' +
             "".join(
-                f'<li><a href="{article_info.path}">'
+                f'<li><a href="{article_filename}">'
                 f'{article_info.title}</a></li>'
-                for article_info in articles_info
+                for article_filename, article_info in articles_info.items()
             ) +
             '</ul>'
         ),
