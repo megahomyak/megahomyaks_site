@@ -1,6 +1,6 @@
-from pony.orm import db_session
+from typing import List
 
-from models import Article
+from dataclasses_ import ArticleInfo
 
 
 def make_prettier(
@@ -19,23 +19,20 @@ def make_prettier(
     )
 
 
-def make_main_page() -> str:
-    with db_session:
-        return make_prettier(
-            (
-                '<p align="center"><img src="site_title.png" width="98%" '
-                'style="image-rendering: pixelated; padding: 1%;" />'
-                '<h1>Articles:</h1>'
-                '<ul>' +
-                "".join(
-                    f'<li><a href="articles/{article.id}">'
-                    f'{article.title}</a></li>'
-                    for article in Article.select().order_by(
-                        lambda article: article.upload_date
-                    )
-                ) +
-                '</ul>'
-            ),
-            title="megahomyak’s site",
-            make_github_style_headers=False
-        )
+def make_main_page(articles_info: List[ArticleInfo]) -> str:
+    return make_prettier(
+        (
+            '<p align="center"><img src="site_title.png" width="98%" '
+            'style="image-rendering: pixelated; padding: 1%;" />'
+            '<h1>Articles:</h1>'
+            '<ul>' +
+            "".join(
+                f'<li><a href="{article_info.path}">'
+                f'{article_info.title}</a></li>'
+                for article_info in articles_info
+            ) +
+            '</ul>'
+        ),
+        title="megahomyak’s site",
+        make_github_style_headers=False
+    )
