@@ -30,7 +30,9 @@ def make_main_page() -> str:
                 "".join(
                     f'<li><a href="articles/{article.id}">'
                     f'{article.title}</a></li>'
-                    for article in Article.select()
+                    for article in Article.select().order_by(
+                        lambda article: article.upload_date
+                    )
                 ) +
                 '</ul>'
             ),
